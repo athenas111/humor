@@ -1,0 +1,191 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Calendário de humor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0}
+/* Layout: one compact month card — header with arrows, 7-column grid of day tiles painted in the mood colour, legend below. */
+:root{
+  --bg:#fff6f9; --card:#ffffff; --fg:#4b3a46; --muted:#9a8794; --line:#f1dde6; --empty:#faf1f5; --ring:#e58fb0;
+  --ink:#3d2f39;
+  --ansioso:#f7b9c8; --agitado:#fbd0a6; --regulado:#c3e6c4; --calmo:#bcd8f3; --apatico:#d9cdf0;
+  --display:"Fredoka","Nunito",ui-rounded,system-ui,sans-serif;
+  --body:"Nunito",ui-rounded,system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1d181c; --card:#272026; --fg:#f2e6ee; --muted:#a8949f; --line:#3a2f37; --empty:#2f272d; --ring:#f2a6c2; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#1d181c; --card:#272026; --fg:#f2e6ee; --muted:#a8949f; --line:#3a2f37; --empty:#2f272d; --ring:#f2a6c2; color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.month{font-family:var(--display);font-weight:600;font-size:1.35rem;letter-spacing:.01em;text-transform:lowercase;text-align:center;flex:1}
+.month small{display:block;font-family:var(--body);font-weight:600;font-size:.72rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.nav{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--empty);color:var(--fg);font-size:1.2rem;line-height:1;cursor:pointer;display:grid;place-items:center}
+.nav:focus-visible,.day:focus-visible,.opt:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wd{font-size:.7rem;font-weight:700;color:var(--muted);text-align:center;text-transform:lowercase;padding-bottom:2px}
+.day{position:relative;aspect-ratio:1/1;max-width:100%;border-radius:12px;border:none;background:var(--empty);color:var(--fg);font-family:var(--body);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:transform .12s ease}
+.day:active{transform:scale(.94)}
+.day .n{position:absolute;top:4px;left:6px;font-size:.68rem;font-weight:700;font-variant-numeric:tabular-nums;opacity:.75}
+.day .e{font-size:1.15rem;line-height:1}
+.day.has{color:var(--ink)}
+.day.has .n{opacity:.7}
+.day.today{box-shadow:inset 0 0 0 2px var(--ring)}
+.day.out{visibility:hidden}
+.day.future{opacity:.45}
+.legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;color:var(--ink);font-size:.78rem;font-weight:700}
+.chip b{font-weight:700;font-variant-numeric:tabular-nums;opacity:.7}
+.note{font-size:.75rem;color:var(--muted);text-align:center;min-height:1em}
+/* picker */
+.sheet{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 55%,transparent);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding-bottom:env(safe-area-inset-bottom,0px)}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-width:460px;padding:16px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px}
+.panel h2{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:0;text-align:center;text-transform:lowercase}
+.opts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.opt{border:none;border-radius:16px;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;color:var(--ink);font-family:var(--body);font-weight:700;font-size:.72rem}
+.opt .e{font-size:1.5rem}
+.opt.sel{box-shadow:inset 0 0 0 2px var(--ink)}
+.row{display:flex;gap:8px}
+.row button{flex:1;border:1px solid var(--line);background:var(--empty);color:var(--fg);border-radius:12px;padding:10px;font-family:var(--body);font-weight:700;cursor:pointer}
+@media (prefers-reduced-motion: reduce){.day{transition:none}}
+</style>
+
+</head><body>
+<div class="wrap">
+  <div class="card">
+    <div class="head">
+      <button class="nav" id="prev" aria-label="Mês anterior">‹</button>
+      <div class="month" id="month">novembro<small>2026</small></div>
+      <button class="nav" id="next" aria-label="Mês seguinte">›</button>
+    </div>
+    <div class="grid" id="grid" role="grid" aria-label="Dias do mês"></div>
+    <div class="legend" id="legend"></div>
+    <div class="note" id="note"></div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle">
+    <h2 id="ptitle">como você estava?</h2>
+    <div class="opts" id="opts"></div>
+    <div class="row"><button id="clear">tirar humor</button><button id="close">fechar</button></div>
+  </div>
+</div>
+
+<script>
+const MOODS=[
+  {k:"ansioso",label:"ansioso",e:"😰",c:"var(--ansioso)"},
+  {k:"agitado",label:"agitado",e:"😤",c:"var(--agitado)"},
+  {k:"regulado",label:"regulado",e:"🙂",c:"var(--regulado)"},
+  {k:"calmo",label:"calmo",e:"😌",c:"var(--calmo)"},
+  {k:"apatico",label:"apático",e:"😶",c:"var(--apatico)"},
+];
+const BY=Object.fromEntries(MOODS.map(m=>[m.k,m]));
+const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const WD=["dom","seg","ter","qua","qui","sex","sáb"];
+const pad=n=>String(n).padStart(2,"0");
+const now=new Date();
+let view={y:now.getFullYear(),m:now.getMonth()};
+let days={};           // {"01":"calmo"}
+let db=null, unsub=null, local=false, pickDay=null, writing=Promise.resolve();
+const $=id=>document.getElementById(id);
+const key=()=>`${view.y}-${pad(view.m+1)}`;
+
+function render(){
+  $("month").innerHTML="";
+  $("month").append(MESES[view.m]);
+  const s=document.createElement("small"); s.textContent=view.y; $("month").append(s);
+  const g=$("grid"); g.innerHTML="";
+  WD.forEach(w=>{const d=document.createElement("div");d.className="wd";d.textContent=w;g.append(d)});
+  const first=new Date(view.y,view.m,1).getDay();
+  const total=new Date(view.y,view.m+1,0).getDate();
+  for(let i=0;i<first;i++){const b=document.createElement("div");b.className="day out";g.append(b)}
+  const todayKey=`${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  for(let d=1;d<=total;d++){
+    const b=document.createElement("button");
+    b.className="day"; b.type="button";
+    const mood=BY[days[pad(d)]];
+    const n=document.createElement("span");n.className="n";n.textContent=d;b.append(n);
+    if(mood){b.classList.add("has");b.style.background=mood.c;const e=document.createElement("span");e.className="e";e.textContent=mood.e;b.append(e)}
+    if(`${view.y}-${view.m}-${d}`===todayKey) b.classList.add("today");
+    if(new Date(view.y,view.m,d)>now) b.classList.add("future");
+    b.setAttribute("aria-label",`${d} de ${MESES[view.m]}${mood?": "+mood.label:""}`);
+    b.addEventListener("click",()=>openPicker(d));
+    g.append(b);
+  }
+  const L=$("legend"); L.innerHTML="";
+  MOODS.forEach(m=>{
+    const c=document.createElement("span");c.className="chip";c.style.background=m.c;
+    const count=Object.values(days).filter(v=>v===m.k).length;
+    c.textContent=`${m.e} ${m.label}`;
+    if(count){const b=document.createElement("b");b.textContent=count;c.append(b)}
+    L.append(c);
+  });
+}
+
+function openPicker(d){
+  pickDay=d;
+  $("ptitle").textContent=`${d} de ${MESES[view.m]}`;
+  const o=$("opts"); o.innerHTML="";
+  MOODS.forEach(m=>{
+    const b=document.createElement("button");b.type="button";b.className="opt"+(days[pad(d)]===m.k?" sel":"");
+    b.style.background=m.c;
+    const e=document.createElement("span");e.className="e";e.textContent=m.e;
+    const t=document.createElement("span");t.textContent=m.label;
+    b.append(e,t);
+    b.addEventListener("click",()=>choose(m.k));
+    o.append(b);
+  });
+  $("sheet").hidden=false;
+  o.querySelector("button")?.focus();
+}
+function closePicker(){ $("sheet").hidden=true; pickDay=null; }
+
+function choose(k){
+  if(pickDay==null) return;
+  const next={...days};
+  if(k) next[pad(pickDay)]=k; else delete next[pad(pickDay)];
+  days=next; render(); closePicker(); save(key(),next);
+}
+
+function save(month,data){
+  if(local||!db){ try{localStorage.setItem("humor-"+month,JSON.stringify(data))}catch(e){} return; }
+  writing=writing.then(()=>db.doc("meses/"+month).set({dias:data})).catch(err=>{
+    $("note").textContent= err&&err.code==="invalid_argument" ? "Você só pode ver este calendário." : "Não deu para salvar agora. Tente de novo.";
+  });
+}
+
+function loadLocal(){
+  try{days=JSON.parse(localStorage.getItem("humor-"+key())||"{}")||{}}catch(e){days={}}
+  render();
+}
+
+function subscribe(){
+  if(unsub){unsub();unsub=null}
+  if(local||!db){loadLocal();return}
+  days={}; render();
+  const month=key();
+  const t=setTimeout(()=>{$("note").textContent="Carregando seus dias…"},10000);
+  unsub=db.doc("meses/"+month).onSnapshot(snap=>{
+    if(month!==key()) return;
+    if(!snap.metadata.fromCache){clearTimeout(t);$("note").textContent=""}
+    days={...((snap.exists&&snap.data().dias)||{})};
+    render();
+  },()=>{clearTimeout(t);$("note").textContent="Não deu para carregar os dias agora."});
+}
+
+$("prev").onclick=()=>{view.m--; if(view.m<0){view.m=11;view.y--} subscribe()};
+$("next").onclick=()=>{view.m++; if(view.m>11){view.m=0;view.y++} subscribe()};
+$("clear").onclick=()=>choose(null);
+$("close").onclick=closePicker;
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closePicker()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closePicker()});
+
+try{ if(!localStorage.getItem("humor-2026-11")) localStorage.setItem("humor-2026-11",JSON.stringify({"01":"agitado","02":"apatico"})) }catch(e){}
+local=true; loadLocal();
+</script>
+</body></html>
