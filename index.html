@@ -31,7 +31,7 @@ body{font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px)
 .day{position:relative;aspect-ratio:1/1;max-width:100%;border-radius:12px;border:none;background:var(--empty);color:var(--fg);font-family:var(--body);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;transition:transform .12s ease}
 .day:active{transform:scale(.94)}
 .day .n{position:absolute;top:4px;left:6px;font-size:.68rem;font-weight:700;font-variant-numeric:tabular-nums;opacity:.75}
-.day .e{font-size:1.15rem;line-height:1}
+.day .e{width:74%;max-width:40px;aspect-ratio:1/1;display:block;margin-top:8%;line-height:0}.day .e svg,.opt .e svg,.chip .ic svg{width:100%;height:100%;display:block}
 .day.has{color:var(--ink)}
 .day.has .n{opacity:.7}
 .day.today{box-shadow:inset 0 0 0 2px var(--ring)}
@@ -39,7 +39,7 @@ body{font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px)
 .day.future{opacity:.45}
 .legend{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;color:var(--ink);font-size:.78rem;font-weight:700}
-.chip b{font-weight:700;font-variant-numeric:tabular-nums;opacity:.7}
+.chip .ic{width:22px;height:22px;display:inline-block}.chip b{font-weight:700;font-variant-numeric:tabular-nums;opacity:.7}
 .note{font-size:.75rem;color:var(--muted);text-align:center;min-height:1em}
 /* picker */
 .sheet{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 55%,transparent);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -47,7 +47,7 @@ body{font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px)
 .panel h2{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:0;text-align:center;text-transform:lowercase}
 .opts{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .opt{border:none;border-radius:16px;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;color:var(--ink);font-family:var(--body);font-weight:700;font-size:.72rem}
-.opt .e{font-size:1.5rem}
+.opt .e{width:46px;height:46px;display:block}
 .opt.sel{box-shadow:inset 0 0 0 2px var(--ink)}
 .row{display:flex;gap:8px}
 .row button{flex:1;border:1px solid var(--line);background:var(--empty);color:var(--fg);border-radius:12px;padding:10px;font-family:var(--body);font-weight:700;cursor:pointer}
@@ -84,6 +84,23 @@ const MOODS=[
   {k:"calmo",label:"calmo",e:"😌",c:"var(--calmo)"},
   {k:"apatico",label:"apático",e:"😶",c:"var(--apatico)"},
 ];
+const INK="#3d2f39", FACEC="#fffaf6", EDGE="#f0d6e1";
+const eye=(x,y)=>`<ellipse cx="${x}" cy="${y}" rx="2.5" ry="3" fill="${INK}"/><circle cx="${x+0.9}" cy="${y-1.1}" r="1" fill="#fff"/><circle cx="${x-0.8}" cy="${y+1.1}" r=".45" fill="#fff"/>`;
+const blush=(c,o=.85)=>`<ellipse cx="11.6" cy="28" rx="2.7" ry="1.5" fill="${c}" opacity="${o}"/><ellipse cx="28.4" cy="28" rx="2.7" ry="1.5" fill="${c}" opacity="${o}"/>`;
+const face=`<circle cx="20" cy="24" r="13.5" fill="${FACEC}" stroke="${EDGE}" stroke-width="1"/>`;
+const svg=b=>`<svg viewBox="0 0 40 40" aria-hidden="true">${b}</svg>`;
+const FACE={
+ // coelhinho preocupado: orelha caída, gotinha, boquinha tremida
+ ansioso: svg(`<ellipse cx="14" cy="9.5" rx="3.6" ry="8" fill="${FACEC}" stroke="${EDGE}" transform="rotate(-12 14 9.5)"/><ellipse cx="14" cy="10" rx="1.6" ry="5.4" fill="#ffc9d9" transform="rotate(-12 14 10)"/><path d="M24 11.5c3-6 9-8 11-5.5s-3.5 6.5-9 8.5z" fill="${FACEC}" stroke="${EDGE}"/><path d="M25.8 11.6c2.6-3.6 6.2-5 7.2-3.6s-2.2 3.7-5.6 5z" fill="#ffc9d9"/>${face}<path d="M12.8 18.6l3 1.4M27.2 18.6l-3 1.4" stroke="${INK}" stroke-width="1.2" stroke-linecap="round"/>${eye(15.5,23.6)}${eye(24.5,23.6)}<path d="M17 30.2q.75-1 1.5 0t1.5 0 1.5 0 1.5 0" fill="none" stroke="${INK}" stroke-width="1.2" stroke-linecap="round"/>${blush("#ffb3c8")}<path d="M33 18.5c1.6 2.3 2.1 3.4 2.1 4.3a2.1 2.1 0 0 1-4.2 0c0-.9.5-2 2.1-4.3z" fill="#9fd2f7"/><circle cx="32.4" cy="22.6" r=".5" fill="#fff"/>`),
+ // gatinho bravinho: orelhas pontudas, olhos ><, marquinha 💢, bochecha estufada
+ agitado: svg(`<path d="M8.5 17.5L9.5 6l8.2 7z" fill="${FACEC}" stroke="${EDGE}" stroke-linejoin="round"/><path d="M10.6 14.6l.5-5.6 4 3.4z" fill="#ffc9b8"/><path d="M31.5 17.5L30.5 6l-8.2 7z" fill="${FACEC}" stroke="${EDGE}" stroke-linejoin="round"/><path d="M29.4 14.6l-.5-5.6-4 3.4z" fill="#ffc9b8"/>${face}<path d="M13.2 21.2l3.6 2.2-3.6 2.2M26.8 21.2l-3.6 2.2 3.6 2.2" fill="none" stroke="${INK}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 29.6q2-1.8 4 0" fill="none" stroke="${INK}" stroke-width="1.3" stroke-linecap="round"/><path d="M8.6 26.6l-3.4-.6M8.8 28.8l-3.3.6M31.4 26.6l3.4-.6M31.2 28.8l3.3.6" stroke="#e7c6d2" stroke-width=".9" stroke-linecap="round"/>${blush("#ff9fae",.9)}<g stroke="#ff7d96" stroke-width="1.6" stroke-linecap="round" fill="none"><path d="M29.6 5.4a2.2 2.2 0 0 0 2.2-2.2"/><path d="M34.6 3.2a2.2 2.2 0 0 0 2.2 2.2"/><path d="M36.8 7.8a2.2 2.2 0 0 0-2.2 2.2"/><path d="M31.8 10a2.2 2.2 0 0 0-2.2-2.2"/></g>`),
+ // ursinho feliz: orelhinhas redondas, olhões brilhando, boquinha ω, coraçãozinho
+ regulado: svg(`<circle cx="10.5" cy="13" r="4.6" fill="${FACEC}" stroke="${EDGE}"/><circle cx="10.5" cy="13" r="2.3" fill="#ffd3b5"/><circle cx="29.5" cy="13" r="4.6" fill="${FACEC}" stroke="${EDGE}"/><circle cx="29.5" cy="13" r="2.3" fill="#ffd3b5"/>${face}${eye(15.2,23)}${eye(24.8,23)}<ellipse cx="20" cy="27.6" rx="1.3" ry=".9" fill="${INK}"/><path d="M17.4 28.6q1.3 1.8 2.6 0q1.3 1.8 2.6 0" fill="none" stroke="${INK}" stroke-width="1.2" stroke-linecap="round"/>${blush("#ffb3c8",.9)}<path d="M33.6 4.4c.9-1.3 3.2-.9 3 1-.2 1.6-2.4 2.8-3 3.3-.6-.5-2.8-1.7-3-3.3-.2-1.9 2.1-2.3 3-1z" fill="#ff9ebb"/><path d="M5.5 5.2l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z" fill="#ffd56b"/>`),
+ // coelhinho tranquilo: orelhas em pé com florzinha, olhos ᵕ ᵕ, sorrisinho
+ calmo: svg(`<ellipse cx="14.5" cy="8.8" rx="3.5" ry="8" fill="${FACEC}" stroke="${EDGE}"/><ellipse cx="14.5" cy="9.4" rx="1.6" ry="5.4" fill="#ffc9d9"/><ellipse cx="25.5" cy="8.8" rx="3.5" ry="8" fill="${FACEC}" stroke="${EDGE}"/><ellipse cx="25.5" cy="9.4" rx="1.6" ry="5.4" fill="#ffc9d9"/>${face}<g fill="#bfe0ff"><circle cx="29.4" cy="3.2" r="1.5"/><circle cx="31.6" cy="4.8" r="1.5"/><circle cx="30.8" cy="7.4" r="1.5"/><circle cx="28" cy="7.4" r="1.5"/><circle cx="27.2" cy="4.8" r="1.5"/></g><circle cx="29.4" cy="5.4" r="1.2" fill="#ffe08a"/><path d="M12.8 23.8q2.4 2.6 4.8 0M22.4 23.8q2.4 2.6 4.8 0" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linecap="round"/><path d="M18.2 28.6q1.8 1.6 3.6 0" fill="none" stroke="${INK}" stroke-width="1.2" stroke-linecap="round"/>${blush("#ffb3c8",.95)}<path d="M5 30.5l.6 1.3 1.3.6-1.3.6-.6 1.3-.6-1.3-1.3-.6 1.3-.6z" fill="#c9b8f2"/>`),
+ // mochi sonolento: brotinho na cabeça, olhos meio fechados, bolinha de "..."
+ apatico: svg(`<path d="M20 11.2c0-3 1-5 3.2-6.2" fill="none" stroke="#9ccf9f" stroke-width="1.3" stroke-linecap="round"/><path d="M20.4 7.6c-2.6-.4-4.4-2-4.6-4 2.4-.2 4.2 1.4 4.6 4z" fill="#b9e3bb"/><path d="M22.6 5.4c1.6-1.8 3.8-2.2 5.4-1.2-1.2 1.8-3.4 2.4-5.4 1.2z" fill="#b9e3bb"/><ellipse cx="20" cy="24.5" rx="15" ry="12.5" fill="${FACEC}" stroke="${EDGE}"/><path d="M12.6 23h5M22.4 23h5" stroke="${INK}" stroke-width="1.4" stroke-linecap="round"/><path d="M13.2 23.2q2 2.4 4 0M23 23.2q2 2.4 4 0" fill="${INK}"/><path d="M18 29.2h4" stroke="${INK}" stroke-width="1.3" stroke-linecap="round"/>${blush("#d9c6f2",.9)}<rect x="27.5" y="7.5" width="10" height="6" rx="3" fill="#ffffff" stroke="#e3d6f2"/><circle cx="30.2" cy="10.5" r=".75" fill="#a99bc9"/><circle cx="32.5" cy="10.5" r=".75" fill="#a99bc9"/><circle cx="34.8" cy="10.5" r=".75" fill="#a99bc9"/>`)
+};
 const BY=Object.fromEntries(MOODS.map(m=>[m.k,m]));
 const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const WD=["dom","seg","ter","qua","qui","sex","sáb"];
@@ -110,7 +127,7 @@ function render(){
     b.className="day"; b.type="button";
     const mood=BY[days[pad(d)]];
     const n=document.createElement("span");n.className="n";n.textContent=d;b.append(n);
-    if(mood){b.classList.add("has");b.style.background=mood.c;const e=document.createElement("span");e.className="e";e.textContent=mood.e;b.append(e)}
+    if(mood){b.classList.add("has");b.style.background=mood.c;const e=document.createElement("span");e.className="e";e.innerHTML=FACE[mood.k];b.append(e)}
     if(`${view.y}-${view.m}-${d}`===todayKey) b.classList.add("today");
     if(new Date(view.y,view.m,d)>now) b.classList.add("future");
     b.setAttribute("aria-label",`${d} de ${MESES[view.m]}${mood?": "+mood.label:""}`);
@@ -121,7 +138,7 @@ function render(){
   MOODS.forEach(m=>{
     const c=document.createElement("span");c.className="chip";c.style.background=m.c;
     const count=Object.values(days).filter(v=>v===m.k).length;
-    c.textContent=`${m.e} ${m.label}`;
+    const ic=document.createElement("span");ic.className="ic";ic.innerHTML=FACE[m.k];c.append(ic,document.createTextNode(m.label));
     if(count){const b=document.createElement("b");b.textContent=count;c.append(b)}
     L.append(c);
   });
@@ -134,7 +151,7 @@ function openPicker(d){
   MOODS.forEach(m=>{
     const b=document.createElement("button");b.type="button";b.className="opt"+(days[pad(d)]===m.k?" sel":"");
     b.style.background=m.c;
-    const e=document.createElement("span");e.className="e";e.textContent=m.e;
+    const e=document.createElement("span");e.className="e";e.innerHTML=FACE[m.k];
     const t=document.createElement("span");t.textContent=m.label;
     b.append(e,t);
     b.addEventListener("click",()=>choose(m.k));
